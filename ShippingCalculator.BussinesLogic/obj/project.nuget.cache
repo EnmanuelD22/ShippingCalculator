@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "RVBFTAZQH4g=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\enman\\source\\repos\\EnmanuelD22\\ShippingCalculator\\ShippingCalculator.BussinesLogic\\ShippingCalculator.BusinessLogic.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\enman\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.11\\microsoft.extensions.dependencyinjection.abstractions.10.0.11.nupkg.sha512",
+    "C:\\Users\\enman\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\10.0.11\\microsoft.extensions.logging.abstractions.10.0.11.nupkg.sha512"
+  ],
+  "logs": []
+}

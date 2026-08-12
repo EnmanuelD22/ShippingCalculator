@@ -1,0 +1,856 @@
+﻿@model ShippingCalculator.Web.Models.TariffFormViewModel
+
+@{
+    ViewData["Title"] = "Cálculo de Tarifas";
+}
+
+<section class="hero">
+    <div class="hero-route" aria-hidden="true">
+        <svg viewBox="0 0 900 80" preserveAspectRatio="none">
+            <path d="M20,58 C220,8 680,8 880,58" />
+        </svg>
+        <span class="route-pulse"></span>
+    </div>
+
+    <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        Cotización rápida y precisa
+    </div>
+
+    <h1 class="hero-title">
+        Cotizador <span>Internacional</span>
+    </h1>
+
+    <p class="hero-subtitle">
+        Calcula el costo estimado de envío de tu paquete de forma rápida,
+        sencilla y precisa.
+    </p>
+</section>
+
+
+<section class="calculator-area">
+
+    <div class="quote-card">
+
+        <div class="quote-header">
+            <div class="quote-icon">
+                <i class="bi bi-box-seam-fill"></i>
+            </div>
+
+            <div>
+                <h2>Calcula tu envío</h2>
+                <p>Introduce los datos de tu paquete para obtener una tarifa.</p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="server-alert" role="alert">
+                <span class="server-alert-icon">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </span>
+
+                <div>
+                    <strong>No pudimos procesar el cálculo</strong>
+                    <span>@Model.ErrorMessage</span>
+                </div>
+            </div>
+        }
+
+        <form asp-action="Index" method="post" id="tariff-form" novalidate>
+
+            <div class="field-row">
+
+                <!-- País -->
+                <div class="field">
+
+                    <label class="field-label" for="SelectedCountryCode">
+                        <span>
+                            <i class="bi bi-globe2"></i>
+                            País de destino
+                        </span>
+                        <small>Obligatorio</small>
+                    </label>
+
+                    <div class="field-control" id="country-control">
+                        <span class="field-icon" aria-hidden="true">
+                            <i class="bi bi-geo-alt"></i>
+                        </span>
+
+                        <select asp-for="SelectedCountryCode"
+                                id="SelectedCountryCode"
+                                class="form-input"
+                                required
+                                aria-describedby="country-error">
+
+                            <option value="" disabled selected>
+                                Selecciona un país
+                            </option>
+
+                            @if (Model.AvailableCountries != null)
+                            {
+                                @foreach (var country in Model.AvailableCountries)
+                                {
+                                    <option value="@country.Code">
+                                        @country.Name — $@country.RatePerKg/kg
+                                    </option>
+                                }
+                            }
+
+                        </select>
+                    </div>
+
+                    <p class="field-helper">
+                        Selecciona el destino de tu paquete.
+                    </p>
+
+                    <p class="field-error"
+                       id="country-error"
+                       role="alert">
+                        <i class="bi bi-exclamation-circle"></i>
+                        Selecciona un país de destino.
+                    </p>
+
+                </div>
+
+
+                <!-- Peso -->
+                <div class="field">
+
+                    <label class="field-label" for="Weight">
+                        <span>
+                            <i class="bi bi-box-seam"></i>
+                            Peso del paquete
+                        </span>
+                        <small>Obligatorio</small>
+                    </label>
+
+                    <div class="field-control" id="weight-control">
+
+                        <span class="field-icon" aria-hidden="true">
+                            <i class="bi bi-box"></i>
+                        </span>
+
+                        <input asp-for="Weight"
+                               id="Weight"
+                               type="number"
+                               step="0.1"
+                               min="0.1"
+                               class="form-input"
+                               placeholder="Ej. 2.50"
+                               required
+                               aria-describedby="weight-error" />
+
+                        <span class="field-unit">
+                            kg
+                        </span>
+
+                    </div>
+
+                    <p class="field-helper">
+                        Introduce el peso total del paquete.
+                    </p>
+
+                    <p class="field-error"
+                       id="weight-error"
+                       role="alert">
+                        <i class="bi bi-exclamation-circle"></i>
+                        Introduce un peso válido.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="form-action">
+
+                <button type="submit"
+                        class="cta-button"
+                        id="calc-button">
+
+                    <span class="cta-icon">
+                        <i class="bi bi-calculator"></i>
+                    </span>
+
+                    <span class="cta-spinner"
+                          aria-hidden="true"></span>
+
+                    <span class="cta-label">
+                        Calcular tarifa de envío
+                    </span>
+
+                    <span class="cta-arrow">
+                        <i class="bi bi-arrow-right"></i>
+                    </span>
+
+                </button>
+
+                <p class="form-note">
+                    <i class="bi bi-shield-check"></i>
+                    Obtén una estimación de tu tarifa en segundos.
+                </p>
+
+            </div>
+
+        </form>
+
+
+        <!-- Resultado -->
+        @if (Model.Result != null)
+        {
+            <div class="result-card"
+                 role="status"
+                 aria-live="polite">
+
+                <div class="result-inner">
+
+                    <div class="result-top">
+
+                        <div class="result-status">
+                            <span class="status-dot">
+                                <i class="bi bi-check2"></i>
+                            </span>
+
+                            <div>
+                                <strong>Tarifa calculada correctamente</strong>
+                                <span>Resumen de tu cotización</span>
+                            </div>
+                        </div>
+
+                        <span class="result-badge">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Listo
+                        </span>
+
+                    </div>
+
+
+                    <div class="result-route" aria-hidden="true">
+
+                        <div class="route-point">
+                            <span class="route-point-icon">
+                                <i class="bi bi-box-seam-fill"></i>
+                            </span>
+                            <span>Paquete</span>
+                        </div>
+
+                        <div class="route-line">
+                            <span></span>
+                        </div>
+
+                        <div class="route-point destination">
+                            <span class="route-point-icon">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </span>
+                            <span>Destino</span>
+                        </div>
+
+                    </div>
+
+
+                    <div class="result-price-container">
+
+                        <p class="result-price-label">
+                            Tarifa estimada
+                        </p>
+
+                        <p class="result-price">
+                            <small>USD</small>
+                            @Model.Result.TotalCost.ToString("N2")
+                        </p>
+
+                    </div>
+
+
+                    <div class="result-meta">
+
+                        <div class="result-meta-item">
+
+                            <span class="meta-icon">
+                                <i class="bi bi-globe2"></i>
+                            </span>
+
+                            <div>
+                                <span class="meta-label">
+                                    Destino
+                                </span>
+
+                                <span class="meta-value">
+                                    @Model.Result.CountryName
+                                </span>
+                            </div>
+
+                        </div>
+
+
+                        <div class="result-meta-item">
+
+                            <span class="meta-icon">
+                                <i class="bi bi-box-seam"></i>
+                            </span>
+
+                            <div>
+                                <span class="meta-label">
+                                    Peso
+                                </span>
+
+                                <span class="meta-value">
+                                    @Model.Result.Weight kg
+                                </span>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        }
+        else if (string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="empty-result">
+
+                <div class="empty-result-icon">
+                    <i class="bi bi-calculator"></i>
+                </div>
+
+                <div>
+                    <strong>Tu tarifa aparecerá aquí</strong>
+                    <span>
+                        Completa el país de destino y el peso del paquete.
+                    </span>
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</section>
+
+
+<!-- =========================================================
+     SECCIÓN DE CONFIANZA / BENEFICIOS
+========================================================= -->
+
+<section class="trust-section"
+         aria-label="Beneficios de ShippingCalculator">
+
+    <div class="trust-content">
+
+        <div class="trust-heading">
+
+            <span class="section-eyebrow">
+                SHIPPINGCALCULATOR
+            </span>
+
+            <h2>
+                Tu envío comienza
+                <span>con una buena estimación.</span>
+            </h2>
+
+            <p>
+                Una experiencia sencilla para conocer el costo estimado
+                de tu envío internacional antes de realizarlo.
+            </p>
+
+        </div>
+
+
+        <div class="trust-visual">
+
+            <div class="trust-illustration"
+                 aria-hidden="true">
+
+                <div class="illustration-glow"></div>
+
+                <svg viewBox="0 0 560 300"
+                     xmlns="http://www.w3.org/2000/svg">
+
+                    <defs>
+
+                        <linearGradient id="skyGrad"
+                                        x1="0"
+                                        y1="0"
+                                        x2="0"
+                                        y2="1">
+
+                            <stop offset="0"
+                                  style="stop-color:var(--sky-050)" />
+
+                            <stop offset="1"
+                                  style="stop-color:var(--sky-100)" />
+
+                        </linearGradient>
+
+                        <linearGradient id="globeGrad"
+                                        x1="0"
+                                        y1="0"
+                                        x2="1"
+                                        y2="1">
+
+                            <stop offset="0"
+                                  style="stop-color:var(--accent-500)" />
+
+                            <stop offset="1"
+                                  style="stop-color:var(--brand-700)" />
+
+                        </linearGradient>
+
+                        <linearGradient id="routeGrad"
+                                        x1="0"
+                                        y1="0"
+                                        x2="1"
+                                        y2="0">
+
+                            <stop offset="0"
+                                  style="stop-color:var(--accent-500)" />
+
+                            <stop offset="1"
+                                  style="stop-color:var(--brand-600)" />
+
+                        </linearGradient>
+
+                    </defs>
+
+
+                    <!-- Fondo -->
+                    <rect x="0"
+                          y="0"
+                          width="560"
+                          height="300"
+                          rx="32"
+                          fill="url(#skyGrad)" />
+
+
+                    <!-- Decoración -->
+                    <circle cx="90"
+                            cy="70"
+                            r="3"
+                            class="illustration-star" />
+
+                    <circle cx="455"
+                            cy="65"
+                            r="3"
+                            class="illustration-star" />
+
+                    <circle cx="485"
+                            cy="110"
+                            r="2"
+                            class="illustration-star" />
+
+
+                    <!-- Nubes -->
+                    <g class="cloud-shape">
+
+                        <circle cx="65"
+                                cy="80"
+                                r="18" />
+
+                        <circle cx="90"
+                                cy="68"
+                                r="25" />
+
+                        <circle cx="118"
+                                cy="80"
+                                r="18" />
+
+                        <rect x="65"
+                              y="78"
+                              width="55"
+                              height="20"
+                              rx="10" />
+
+                    </g>
+
+
+                    <g class="cloud-shape">
+
+                        <circle cx="425"
+                                cy="72"
+                                r="16" />
+
+                        <circle cx="450"
+                                cy="62"
+                                r="23" />
+
+                        <circle cx="477"
+                                cy="73"
+                                r="17" />
+
+                        <rect x="425"
+                              y="72"
+                              width="52"
+                              height="19"
+                              rx="10" />
+
+                    </g>
+
+
+                    <!-- Línea de ruta -->
+                    <path class="illustration-route"
+                          d="M115,190 C190,120 340,105 445,165" />
+
+                    <circle class="route-origin"
+                            cx="115"
+                            cy="190"
+                            r="7" />
+
+                    <circle class="route-destination"
+                            cx="445"
+                            cy="165"
+                            r="7" />
+
+
+                    <!-- Globo -->
+                    <ellipse class="drop-shadow"
+                             cx="280"
+                             cy="258"
+                             rx="90"
+                             ry="10" />
+
+                    <circle cx="280"
+                            cy="165"
+                            r="78"
+                            fill="url(#globeGrad)" />
+
+                    <ellipse class="globe-grid"
+                             cx="280"
+                             cy="165"
+                             rx="78"
+                             ry="27" />
+
+                    <ellipse class="globe-grid"
+                             cx="280"
+                             cy="165"
+                             rx="78"
+                             ry="51" />
+
+                    <ellipse class="globe-grid"
+                             cx="280"
+                             cy="165"
+                             rx="30"
+                             ry="78" />
+
+                    <path class="globe-land"
+                          d="M235,130
+                    q15,-20 37,-12
+                    q18,7 12,26
+                    q-7,18 -30,16
+                    q-24,-2 -19,-30z" />
+
+                    <path class="globe-land"
+                          d="M285,192
+                    q14,-13 29,-5
+                    q12,7 4,20
+                    q-8,12 -24,9
+                    q-14,-3 -9,-24z" />
+
+
+                    <!-- Pin -->
+                    <path d="M155,92
+                    c18,0 32,14 32,31
+                    c0,21 -32,51 -32,51
+                    c0,0 -32,-30 -32,-51
+                    c0,-17 14,-31 32,-31z"
+                          fill="var(--pin-500)" />
+
+                    <circle class="pin-dot"
+                            cx="155"
+                            cy="123"
+                            r="10" />
+
+
+                    <!-- Paquete -->
+                    <ellipse class="drop-shadow"
+                             cx="405"
+                             cy="230"
+                             rx="27"
+                             ry="6" />
+
+                    <polygon points="370,180 405,163 440,180 405,198"
+                             fill="var(--parcel-100)" />
+
+                    <polygon points="370,180 405,198 405,232 370,214"
+                             fill="var(--parcel-500)" />
+
+                    <polygon points="405,198 440,180 440,214 405,232"
+                             fill="var(--parcel-700)" />
+
+                    <line class="parcel-seam"
+                          x1="405"
+                          y1="163"
+                          x2="405"
+                          y2="232" />
+
+                </svg>
+
+            </div>
+
+        </div>
+
+
+        <div class="trust-benefits">
+
+            <div class="benefit">
+
+                <span class="benefit-icon">
+                    <i class="bi bi-globe2"></i>
+                </span>
+
+                <div class="benefit-content">
+
+                    <h3>
+                        Cobertura Global
+                    </h3>
+
+                    <p>
+                        Envíos a múltiples destinos internacionales
+                        desde una sola plataforma.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="benefit">
+
+                <span class="benefit-icon">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                </span>
+
+                <div class="benefit-content">
+
+                    <h3>
+                        Precisión en Tiempo Real
+                    </h3>
+
+                    <p>
+                        Obtén una estimación rápida basada en el destino
+                        y peso de tu paquete.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="benefit">
+
+                <span class="benefit-icon">
+                    <i class="bi bi-shield-check"></i>
+                </span>
+
+                <div class="benefit-content">
+
+                    <h3>
+                        Seguridad y Confianza
+                    </h3>
+
+                    <p>
+                        Información clara para ayudarte a tomar mejores
+                        decisiones sobre tus envíos.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+@section Scripts {
+
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css"
+          rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            /*
+             * ---------------------------------------------------------
+             * Tom Select
+             * ---------------------------------------------------------
+             */
+
+            new TomSelect("#SelectedCountryCode", {
+                create: false,
+                sortField: {
+                    field: "text",
+                    direction: "asc"
+                },
+                placeholder: "Selecciona un país...",
+                controlInput: null
+            });
+
+
+            /*
+             * ---------------------------------------------------------
+             * Elementos
+             * ---------------------------------------------------------
+             */
+
+            var form = document.getElementById('tariff-form');
+
+            var countrySelect =
+                document.getElementById('SelectedCountryCode');
+
+            var weightInput =
+                document.getElementById('Weight');
+
+            var countryControl =
+                document.getElementById('country-control');
+
+            var weightControl =
+                document.getElementById('weight-control');
+
+            var countryError =
+                document.getElementById('country-error');
+
+            var weightError =
+                document.getElementById('weight-error');
+
+            var calcButton =
+                document.getElementById('calc-button');
+
+
+            /*
+             * ---------------------------------------------------------
+             * Estado de los campos
+             * ---------------------------------------------------------
+             */
+
+            function setFieldState(control, errorEl, isValid) {
+
+                control.classList.toggle(
+                    'has-error',
+                    !isValid
+                );
+
+                errorEl.classList.toggle(
+                    'show',
+                    !isValid
+                );
+
+            }
+
+
+            /*
+             * ---------------------------------------------------------
+             * Validación
+             * ---------------------------------------------------------
+             */
+
+            form.addEventListener('submit', function(evt) {
+
+                var isCountryValid =
+                    !!countrySelect.value;
+
+                var weightValue =
+                    parseFloat(weightInput.value);
+
+                var isWeightValid =
+                    !isNaN(weightValue) &&
+                    weightValue > 0;
+
+
+                setFieldState(
+                    countryControl,
+                    countryError,
+                    isCountryValid
+                );
+
+                setFieldState(
+                    weightControl,
+                    weightError,
+                    isWeightValid
+                );
+
+
+                if (!isCountryValid || !isWeightValid) {
+
+                    evt.preventDefault();
+
+                    if (isCountryValid) {
+                        weightInput.focus();
+                    } else {
+                        countrySelect.focus();
+                    }
+
+                    return;
+                }
+
+
+                /*
+                 * Estado de carga
+                 */
+
+                calcButton.classList.add('is-loading');
+
+                calcButton
+                    .querySelector('.cta-label')
+                    .textContent = 'Calculando tarifa...';
+
+                calcButton.disabled = true;
+
+            });
+
+
+            /*
+             * ---------------------------------------------------------
+             * Limpiar errores mientras el usuario corrige
+             * ---------------------------------------------------------
+             */
+
+            countrySelect.addEventListener(
+                'change',
+                function() {
+
+                    if (countrySelect.value) {
+
+                        setFieldState(
+                            countryControl,
+                            countryError,
+                            true
+                        );
+
+                    }
+
+                }
+            );
+
+
+            weightInput.addEventListener(
+                'input',
+                function() {
+
+                    var value =
+                        parseFloat(weightInput.value);
+
+                    if (!isNaN(value) && value > 0) {
+
+                        setFieldState(
+                            weightControl,
+                            weightError,
+                            true
+                        );
+
+                    }
+
+                }
+            );
+
+        });
+
+    </script>
+}
