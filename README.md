@@ -4,7 +4,7 @@
 
 ---
 
-## ✨ Características Principales
+##  Características Principales
 
 *   **Cálculo en Tiempo Real:** Determinación inmediata de costos basados en el peso del paquete y las tasas configuradas por destino.
 *   **Patrón Strategy:** Implementación de estrategias de cálculo flexibles que permiten aplicar diferentes reglas de negocio según el país sin modificar el núcleo del sistema.
@@ -15,11 +15,11 @@
 
 ---
 
-## 🏛️ Arquitectura del Sistema
+##  Arquitectura del Sistema
 
 El proyecto sigue una **Arquitectura Monolítica en Capas (N-Tier)**, donde cada componente tiene una responsabilidad específica, facilitando el mantenimiento y la escalabilidad.
 
-## 💻 Stack Tecnológico
+##  Stack Tecnológico
 
 El desarrollo de ShippingCalculator se fundamenta en un ecosistema de Microsoft robusto y escalable:
 
